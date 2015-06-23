@@ -12,7 +12,7 @@ module RSpec
       end
 
       attr_reader :explanation, :example, :method, :path
-      attr_reader :request_parameters, :request_headers
+      attr_reader :request_body, :request_parameters, :request_headers
       attr_reader :response, :parsed_response, :response_parameters, :response_headers
       def initialize(explanation:, example:, method:, path:, request_parameters:, request_headers:, response:)
         @explanation    = explanation
@@ -21,8 +21,12 @@ module RSpec
         @path           = path
         @response       = response
 
-        process_request_parameters(request_parameters)
-        process_request_headers(request_headers)
+        if request_parameters.is_a?(Hash)
+          process_request_parameters(request_parameters)
+        else
+          @request_body = request_parameters
+        end
+        process_request_headers(request_headers || {})
         process_response_parameters
         process_response_headers
       end

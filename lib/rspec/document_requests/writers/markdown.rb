@@ -36,12 +36,19 @@ module RSpec
 
 FILE
 
-          if request.request_parameters.any?
+          if request.request_parameters and request.request_parameters.any?
             @file.write <<FILE
 #### Parameters
 
 FILE
             parameters_table(request.request_parameters)
+          elsif request.request_body
+            @file.write <<FILE
+#### Body
+
+    #{request.request_body}
+
+FILE
           end
 
           if request.request_headers.any?
@@ -97,7 +104,7 @@ FILE
 |------|------|-----------|-------|---|
 FILE
 
-          parameters.sort.each do |name, parameter|
+          parameters.each do |name, parameter|
             @file.puts "| #{name}  | #{parameter.type}  | #{"Required" if parameter.required}  | #{parameter.value}  | #{parameter.message}  |"
           end
           @file.puts

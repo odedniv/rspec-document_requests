@@ -23,7 +23,6 @@ module RSpec
             )
           end
           @document_request_explanation = Explanation.new
-          DSL.currently_documented_example = nil
 
           result
         end
@@ -57,6 +56,7 @@ RSpec.configure do |config|
 
     config.after(:suite) { RSpec::DocumentRequests::Builder.new }
     config.before { |ex| RSpec::DocumentRequests::DSL.currently_documented_example = ex }
+    config.after { |ex| RSpec::DocumentRequests::DSL.currently_documented_example = nil }
   end
 
   config.include RSpec::DocumentRequests::DSL, doc: true
