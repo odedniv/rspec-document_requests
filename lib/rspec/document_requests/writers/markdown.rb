@@ -30,7 +30,7 @@ module RSpec
 
         def request(request, missing_levels:)
           @file.write <<FILE
-### Request #{"(#{request.explanation.message})" if request.explanation.message}
+### Request#{" (#{request.explanation.message})" if request.explanation.message}
 
     #{request.method} #{request.path}
 
@@ -38,7 +38,6 @@ FILE
 
           if request.request_parameters.any?
             @file.write <<FILE
-
 #### Parameters
 
 FILE
@@ -47,7 +46,6 @@ FILE
 
           if request.request_headers.any?
             @file.write <<FILE
-
 #### Headers
 
 FILE
@@ -55,12 +53,15 @@ FILE
           end
 
           @file.write <<FILE
-
 ### Response
 
 #### Status
 
     #{request.response.status} #{request.response.status_message}
+
+#### Content-Type
+
+    #{request.response.content_type}
 
 FILE
 
@@ -73,7 +74,6 @@ FILE
           end
 
           @file.write <<FILE
-
 #### Body
 
     #{request.response.body}
@@ -82,7 +82,6 @@ FILE
 
           if request.response_headers.any?
             @file.write <<FILE
-
 #### Headers
 
 FILE
@@ -94,13 +93,14 @@ FILE
 
         def parameters_table(parameters)
           @file.write <<FILE
-| Name | Type | Required? | Value | Explanation |
-|------|------|-----------|-------|-------------|
+| Name | Type | Required? | Value |   |
+|------|------|-----------|-------|---|
 FILE
 
           parameters.sort.each do |name, parameter|
             @file.puts "| #{name}  | #{parameter.type}  | #{"Required" if parameter.required}  | #{parameter.value}  | #{parameter.message}  |"
           end
+          @file.puts
         end
       end
     end

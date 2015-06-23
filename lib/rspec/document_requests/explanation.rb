@@ -26,13 +26,13 @@ module RSpec
       end
 
       def request(&block)
-        return @request if not block_given?
-        @request.instance_eval(&block)
+        @request.instance_eval(&block) if block_given?
+        @request
       end
 
       def response(&block)
-        return @request if not block_given?
-        @response.instance_eval(&block)
+        @response.instance_eval(&block) if block_given?
+        @response
       end
     end
   end

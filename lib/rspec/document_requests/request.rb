@@ -59,7 +59,7 @@ module RSpec
 
       def process_request_parameters(parameters, prefix: nil)
         @request_parameters = {}
-        process_parameters(request_parameters, @request_parameters, explanation: @explanation.request.parameters)
+        process_parameters(parameters, @request_parameters, explanation: @explanation.request.parameters)
       end
 
       def process_request_headers(headers)

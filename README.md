@@ -102,8 +102,8 @@ RSpec.describe "Session resource", type: :request, doc: true do
     before do
       explain do # No request explanation
         request do
-          parameter 'session[username]', "The username", required: true, type: :string
-          parameter 'session[password]', required: true, type: :string # No explanation
+          parameter 'session[username]', "The username", required: true, type: 'string'
+          parameter 'session[password]', required: true, type: 'string' # No explanation
           header 'Content-Type', ... # you get the point
         end
         response do
