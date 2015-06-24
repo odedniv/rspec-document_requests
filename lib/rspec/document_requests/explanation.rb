@@ -27,7 +27,7 @@ module RSpec
         define_method(side) do |message = nil, &block|
           instance = instance_variable_get(:"@#{side}")
           instance.message = message if message
-          instance.instance_eval(&block) if block_given?
+          instance.instance_eval(&block) if block
           instance
         end
       end
