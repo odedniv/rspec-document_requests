@@ -14,100 +14,115 @@ module RSpec
           end
         end
 
-        def title(description)
+        def title(description:, explanation:)
           @file.puts "# #{description}"
           @file.puts
+          if explanation
+            @file.puts explanation
+            @file.puts
+          end
         end
 
-        def child(description:, filename:)
+        def child(description:, filename:, last:)
           @file.puts "* [#{description}](#{filename})"
+          @file.puts if last
         end
 
-        def example_title(description, missing_levels:)
-          @file.puts "## #{missing_levels.map { |l| "#{l} > " }.join} #{description}"
+        def example_title(description:, explanation:, missing_levels:)
+          @file.puts "## #{missing_levels.map { |l| "#{l[:description]} > " }.join}#{description}"
           @file.puts
-        end
-
-        def request(request, missing_levels:)
-          @file.write <<FILE
-### Request#{" (#{request.explanation.message})" if request.explanation.message}
-
-    #{request.method} #{request.path}
-
-FILE
-
-          if request.request_parameters and request.request_parameters.any?
-            @file.write <<FILE
-#### Parameters
-
-FILE
-            parameters_table(request.request_parameters)
-          elsif request.request_body
-            @file.write <<FILE
-#### Body
-
-    #{request.request_body}
-
-FILE
-          end
-
-          if request.request_headers.any?
-            @file.write <<FILE
-#### Headers
-
-FILE
-            parameters_table(request.request_headers)
-          end
-
-          @file.write <<FILE
-### Response
-
-#### Status
-
-    #{request.response.status} #{request.response.status_message}
-
-#### Content-Type
-
-    #{request.response.content_type}
-
-FILE
-
-          if request.response_parameters and request.response_parameters.any?
-            @file.write <<FILE
-#### Parameters
-
-FILE
-            parameters_table(request.response_parameters)
-          end
-
-          @file.write <<FILE
-#### Body
-
-    #{request.response.body}
-
-FILE
-
-          if request.response_headers.any?
-            @file.write <<FILE
-#### Headers
-
-FILE
-            parameters_table(request.response_headers)
+          if explanation
+            @file.puts explanation
+            @file.puts
           end
         end
 
-        private
+        module ParametersTable
+          private
 
-        def parameters_table(parameters)
-          @file.write <<FILE
-| Name | Type | Required? | Value |   |
-|------|------|-----------|-------|---|
-FILE
-
-          parameters.each do |name, parameter|
-            @file.puts "| #{name}  | #{parameter.type}  | #{"Required" if parameter.required}  | #{parameter.value}  | #{parameter.message}  |"
+          def parameters_table(parameters)
+            @file.puts "| Name | Type | Required? | Value |   |"
+            @file.puts "|------|------|-----------|-------|---|"
+            parameters.each do |name, parameter|
+              @file.puts "| #{name}  | #{parameter.type}  | #{"Required" if parameter.required}  | #{parameter.value}  | #{parameter.message}  |"
+            end
+            @file.puts
           end
-          @file.puts
+        end
+
+        class Request < Base::Request
+          include ParametersTable
+
+          def title(message)
+            @file.puts "### Request#{" (#{message})" if message}"
+            @file.puts
+          end
+
+          def path(method, path)
+            @file.puts "    #{method} #{path}"
+            @file.puts
+          end
+
+          def parameters(parameters)
+            @file.puts "#### Parameters"
+            @file.puts
+            parameters_table(parameters)
+          end
+
+          def body(body)
+            @file.puts "#### Body"
+            @file.puts
+            @file.puts "    #{body}"
+            @file.puts
+          end
+
+          def headers(headers)
+            @file.puts "#### Headers"
+            @file.puts
+            parameters_table(headers)
+          end
+        end
+
+        class Response < Base::Response
+          include ParametersTable
+
+          def title(message)
+            @file.puts "### Response#{" (#{message})" if message}"
+            @file.puts
+          end
+
+          def status(status, message)
+            @file.puts "#### Status"
+            @file.puts
+            @file.puts "    #{status} #{message}"
+            @file.puts
+          end
+
+          def content_type(content_type)
+            @file.puts "#### Content-Type"
+            @file.puts
+            @file.puts "    #{content_type}"
+            @file.puts
+          end
+
+          def parameters(parameters)
+            @file.puts "#### Parameters"
+            @file.puts
+            parameters_table(parameters)
+          end
+
+          def body(body)
+            @file.puts "#### Body"
+            @file.puts
+            @file.puts "    #{body}"
+            @file.puts
+          end
+
+          def headers(headers)
+            @file.puts "#### Headers"
+            @file.puts
+            parameters_table(headers)
+          end
         end
       end
     end

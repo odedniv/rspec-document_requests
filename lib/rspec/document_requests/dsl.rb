@@ -28,9 +28,8 @@ module RSpec
         end
       end
 
-      def explain(message = nil, &block)
-        document_request_explanation.message = message if message
-        document_request_explanation.instance_eval(&block) if block_given?
+      def explain(&block)
+        document_request_explanation.instance_eval(&block)
       end
 
       def document_request_explanation

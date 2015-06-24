@@ -44,6 +44,8 @@ require 'rspec/document_requests/dsl' # <- this line
 
 ### Marking code to document
 
+**NOTE:** The `nodoc` DSL is not available in example groups (`describe`/`context`) without `doc: true`.
+
 In your example group (`describe`/`context`), simply add the `doc: true` metadata:
 
 ```ruby
@@ -85,7 +87,7 @@ also exclude any specs without `doc: true` metadata to make this run faster.
 
 ### Explaining the request
 
-**NOTE:** This DSL is not available in `doc: false` example groups (`describe`/`context`).
+**NOTE:** The `explain` DSL is not available in example groups (`describe`/`context`) without `doc: true`.
 
 Just before your request, it's a good idea to explain (everything is optional):
 
@@ -93,20 +95,20 @@ Just before your request, it's a good idea to explain (everything is optional):
 # spec/requests/session_spec.rb
 
 RSpec.describe "Session resource", type: :request, doc: true do
-  describe "Create session" do
+  describe "Create session", explanation: "This is how you create a session." do
     before do
-      explain "Creating the user"
+      explain { request "Creating a user" }
       post "/users", user: { username: "myuser", password: "123123" }
     end
 
     before do
-      explain do # No request explanation
-        request do
+      explain do
+        request do # No request explanation
           parameter 'session[username]', "The username", required: true, type: 'string'
           parameter 'session[password]', required: true, type: 'string' # No explanation
           header 'Content-Type', ... # you get the point
         end
-        response do
+        response do # No response explanation
           parameter 'message', "Message from the server", required: true # No type
           parameter 'session_id', "The session ID" # Not required and no type
           header 'Set-Cookie', ...

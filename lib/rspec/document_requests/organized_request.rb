@@ -1,19 +1,22 @@
 module RSpec
   module DocumentRequests
     class OrganizedRequest
-      attr_reader :parent, :filename, :description, :example_requests, :children, :levels
-      def initialize(description:, parent: nil)
-        @description = description
+      attr_reader :parent, :metadata, :example_requests, :children, :levels
+      def initialize(metadata, parent: nil)
+        @metadata = metadata
         @parent = parent
-        @filename = Pathname.new(DocumentRequests.configuration.filename_generator.call(description))
         @example_requests = Hash.new { |h, k| h[k] = [] }
         @children = {}
         @levels = Hash.new { |h, k| h[k] = 0 }
         @parent.increase_level(self) if @parent
       end
 
-      def child(description)
-        @children[DocumentRequests.configuration.filename_generator.call(description)] ||= OrganizedRequest.new(description: description, parent: self)
+      def filename
+        @filename ||= Pathname.new(DocumentRequests.configuration.filename_generator.call(@metadata[:description]))
+      end
+
+      def child(metadata)
+        @children[DocumentRequests.configuration.filename_generator.call(metadata[:description])] ||= OrganizedRequest.new(metadata, parent: self)
       end
 
       def increase_level(child)
@@ -44,7 +47,7 @@ module RSpec
 
           organized_request = root
           metadata_tree.each do |metadata|
-            organized_request = organized_request.child(metadata[:description])
+            organized_request = organized_request.child(metadata)
           end
           organized_request.example_requests[request.example] << request
         end

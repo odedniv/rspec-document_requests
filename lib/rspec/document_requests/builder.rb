@@ -30,8 +30,9 @@ module RSpec
           @writer = config.writer.new(file)
           write_breadcrumb
           write_title
-          @current.ungrouped_children.each { |child| write_child(child) }
+          @current.ungrouped_children.each { |child| write_child(child, last: child == @current.ungrouped_children.last) }
           write_recursive_requests(@current)
+          @writer.close
         end
 
         @current.ungrouped_children.each do |child|
@@ -44,17 +45,27 @@ module RSpec
         missing_levels = []
         if not child == @current
           missing = child
-          missing_levels.unshift(missing.description) while (missing = missing.parent) and missing != @current
+          missing_levels.unshift(missing) while (missing = missing.parent) and missing != @current
+        end
+        missing_levels = missing_levels.map do |organized_entry|
+          {
+            description: organized_entry.metadata[:description],
+            explanation: metadata_explanation(organized_entry.metadata),
+          }
         end
 
         child.example_requests.to_a.uniq { |e,| e.example_group }.each do |example, requests|
           write_example_title(example, missing_levels: missing_levels) unless child == @current
-          requests.each { |request| write_request(request, missing_levels: missing_levels) }
+          requests.each { |request| write_request(request) }
         end
 
         child.grouped_children.each_with_index do |grandchild, i|
           write_recursive_requests(grandchild)
         end
+      end
+
+      def metadata_explanation(metadata)
+        metadata[:explanation] if metadata[:parent_example_group].nil? or metadata[:explanation] != metadata[:parent_example_group][:explanation]
       end
 
       def write_breadcrumb
@@ -67,7 +78,7 @@ module RSpec
         parent_path = Pathname.new('.').join(*parent_tree.length.times.map { '..' })
         parent_tree.each do |parent|
           @writer.breadcrumb(
-            description: parent.description,
+            description: parent.metadata[:description],
             filename:    parent_path.join(parent.filename).sub_ext(config.writer::EXTENSION),
             last:        parent == @current.parent,
           )
@@ -76,22 +87,37 @@ module RSpec
       end
 
       def write_title
-        @writer.title(@current.description)
+        metadata = @current.metadata
+        @writer.title(description: metadata[:description], explanation: metadata_explanation(metadata))
       end
 
-      def write_child(child)
+      def write_child(child, last:)
         @writer.child(
-          description: child.description,
+          description: child.metadata[:description],
           filename:    @current.filename.join(child.filename).sub_ext(config.writer::EXTENSION),
+          last:        last,
         )
       end
 
       def write_example_title(example, missing_levels:)
-        @writer.example_title(example.example_group.metadata[:description], missing_levels: missing_levels)
+        metadata = example.example_group.metadata
+        @writer.example_title(description: metadata[:description], explanation: metadata_explanation(metadata), missing_levels: missing_levels)
       end
 
-      def write_request(request, missing_levels:)
-        @writer.request(request, missing_levels: missing_levels)
+      def write_request(request)
+        # request
+        @writer.request.title(request.explanation.request.message)
+        @writer.request.path(request.method, request.path)
+        @writer.request.parameters(request.request_parameters) if request.request_parameters.present?
+        @writer.request.body(request.request_body)             if request.request_body.present?
+        @writer.request.headers(request.request_headers)       if request.request_headers.present?
+        # response
+        @writer.response.title(request.explanation.response.message)
+        @writer.response.status(request.response.status, request.response.status_message)
+        @writer.response.content_type(request.response.content_type)
+        @writer.response.parameters(request.response_parameters) if request.response_parameters.present?
+        @writer.response.body(request.response.body)             if request.response.body.present?
+        @writer.response.headers(request.response_headers)       if request.response_headers.present?
       end
     end
   end
