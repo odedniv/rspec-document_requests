@@ -124,6 +124,46 @@ end
 **NOTE:** Explaining response parameters only works when this gem can
 parse the response body, see [here](#configuration) how to configure it.
 
+### Reference
+
+#### Example Group Metadatas
+
+(The hash you pass to `describe`/`context`).
+
+| Symbol        | Meaning |
+|---------------|---------|
+| `doc`         | When set to `true`, all requests in the example group (`describe`/`context`) are automatically documented. Use `doc: false` to override a parent example group. |
+| `explanation` | When set, this will be written below the title of the example group (`describe`/`context`) (depending on the writer). Use this to further explain the meaning of the request in your API. **NOTE:** grouped example groups (see `group_levels`) will not show their explanation in the default markdown writer. |
+
+#### DSL
+
+These functions are available from within your example (inside the `it`, `specify`, `before`, `after`, `around`).
+
+**NOTE:** This is only available inside example groups that have the `doc: true` metadata.
+
+| Method    | Meaning |
+|-----------|---------|
+| `nodoc`   | Receives a block that will skip documentation. Use this to skip specific requests that are used to prepare the request, or use the `doc: false` metadata on the entire example group. |
+| `explain` | Receives a block in which you can explain your request and its response. Inside the block, see [Explain Block](#explain-block). |
+
+##### Explain Block
+
+These methods are used inside the block passed to `explain`.
+
+| Method     | Meaning |
+|------------|---------|
+| `request`  | Receives an optional parameter that describes the meaning of this request to the entire test sequence. Also receives an optional block, see [Request/Response Block](#requestresponse-block). |
+| `response` | Receives an optional parameter that describes the meaning of this request's response to the entire test sequence. Also receives an optional block, see [Request/Response Block](#requestresponse-block). |
+
+###### Request/Response Block
+
+These methods are used inside the block passed to `request` and `response` within the `explain` block.
+
+| Method      | Meaning |
+|-------------|---------|
+| `parameter` | Receives a string that is the name of the parameter, use `[]` for nested arrays & objects. Receives an additional optional string that describes the parameter, and a hash with these optional keys: `:required`, and `:type`. **NOTE:** This only works in response when the response is parsed, see [Configuration's](#configuration) `response_parser` to make sure it does. |
+| `header`    | Receives a string that is the name of the header, use `[]` for nested arrays & objects. Receives an additional optional string that describes the header, and a hash with these optional keys: `:required`, and `:type`. |
+
 ### Configuration
 
 These are the possible configurations:
@@ -236,7 +276,8 @@ The gem works, but it's missing some basics:
 
 * Unit tests (specs).
 * Example generated documentations.
-* More writers (see `lib/rspec/document_requests/writers/base.rb`).
+* More writers (see [lib/rspec/document_requests/writers/base.rb](lib/rspec/document_requests/writers/base.rb)).
+* More default response parsers (see [lib/rspec/document_requests/configuration.rb](lib/rspec/document_requests/configuration.rb)).
 
 So...
 
