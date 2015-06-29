@@ -92,24 +92,22 @@ module RSpec
 
       def process_parameters(input, output, explanation:, prefix: nil)
         input.each do |key, value|
-          name = prefix ? "#{prefix}[#{key}]" : key.to_s
+          key, value = nil, key if input.is_a?(Array)
+          if prefix
+            name = "#{prefix}[#{key}]"
+          else
+            name = input.is_a?(Array) ? "[]" : key.to_s
+          end
           case value
             when Hash
               process_parameters(value, output, explanation: explanation, prefix: name)
             when Array
-              name += "[]"
-              base_values = []
-              value.each do |subvalue|
-                case subvalue
-                  when Hash
-                    process_parameters(subvalue, output, explanation: explanation, prefix: name)
-                  else
-                    base_values << subvalue
-                end
-              end
-              if base_values.any?
+              if value.all? { |subvalue| subvalue.is_a?(Hash) }
+                process_parameters(value, output, explanation: explanation, prefix: name)
+              else
+                name += "[]"
                 output[name] ||= explanation[name] || Parameter.new(generated: true)
-                output[name].value = [output[name].value, base_values.to_s].compact.join(", ")
+                output[name].value = [output[name].value, value.to_s].compact.join(", ")
               end
             else
               output[name] ||= explanation[name] || Parameter.new(generated: true)
