@@ -104,8 +104,8 @@ RSpec.describe "Session resource", type: :request, doc: true do
     before do
       explain do
         request do # No request explanation
-          parameter 'session[username]', "The username", required: true, type: 'string'
-          parameter 'session[password]', required: true, type: 'string' # No explanation
+          parameter 'session[username]', "The username", required: true,           type: 'string'
+          parameter 'session[password]',                 required: "when not SSO", type: 'string' # No explanation
           header 'Content-Type', ... # you get the point
         end
         response do # No response explanation
@@ -141,10 +141,10 @@ These functions are available from within your example (inside the `it`, `specif
 
 **NOTE:** This is only available inside example groups that have the `doc: true` metadata.
 
-| Method    | Meaning |
-|-----------|---------|
-| `nodoc`   | Receives a block that will skip documentation. Use this to skip specific requests that are used to prepare the request, or use the `doc: false` metadata on the entire example group. |
-| `explain` | Receives a block in which you can explain your request and its response. Inside the block, see [Explain Block](#explain-block). |
+| Method   | Meaning |
+|-------------------|---------|
+| `nodoc`  | Skips documentation for the rest of this example. When given a block, only skips requests made inside the block. Use this to skip specific requests that are used to prepare the request, or use the `doc: false` metadata on the entire example group. |
+| `explain`| Receives a block in which you can explain your request and its response. Inside the block, see [Explain Block](#explain-block). |
 
 ##### Explain Block
 
@@ -193,12 +193,26 @@ RSpec::DocumentRequests.configure do |config|
     end
   }
 
+  # Request parameters
   config.include_request_parameters  = nil # nil means not used
   config.exclude_request_parameters  = []
   config.hide_request_parameters     = [] # Displays '...' instead of actual value
+  config.enforce_explain_request_parameters = false # Raise error if an unexplained included parameter is used
+  # Request headers
+  config.include_request_headers  = nil # nil means not used
+  config.exclude_request_headers  = []
+  config.hide_request_headers     = [] # Displays '...' instead of actual value
+  config.enforce_explain_request_headers = false
+  # Response parameters
   config.include_response_parameters = nil
   config.exclude_response_parameters = []
   config.hide_response_parameters    = []
+  config.enforce_explain_response_parameters = false
+  # Response headers
+  config.include_response_headers = nil
+  config.exclude_response_headers = []
+  config.hide_response_headers    = []
+  config.enforce_explain_response_headers = false
 end
 ```
 

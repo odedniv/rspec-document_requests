@@ -24,6 +24,7 @@ module RSpec
           add_property :"include_#{side}_#{part}", nil
           add_property :"exclude_#{side}_#{part}", []
           add_property :"hide_#{side}_#{part}", []
+          add_property :"enforce_explain_#{side}_#{part}", false
         end
       end
 

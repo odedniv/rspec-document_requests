@@ -44,7 +44,7 @@ module RSpec
             @file.puts "| Name | Type | Required? | Value |   |"
             @file.puts "|------|------|-----------|-------|---|"
             parameters.each do |name, parameter|
-              @file.puts "| #{name}  | #{parameter.type}  | #{"Required" if parameter.required}  | #{parameter.value}  | #{parameter.message}  |"
+              @file.puts "| #{name}  | #{parameter.type}  | #{parameter.required || false}  | #{parameter.value}  | #{parameter.message}  |"
             end
             @file.puts
           end

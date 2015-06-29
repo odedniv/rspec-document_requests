@@ -2,12 +2,13 @@ module RSpec
   module DocumentRequests
     class Request
       class Parameter
-        attr_accessor :message, :required, :type, :value
-        def initialize(message = nil, required: false, type: nil, value: nil)
+        attr_accessor :message, :required, :type, :value, :generated
+        def initialize(message = nil, required: false, type: nil, value: nil, generated: false)
           @message = message
           @required = required
           @type = type
           @value = value
+          @generated = generated
         end
       end
 
@@ -33,46 +34,41 @@ module RSpec
 
       private
 
-      def self.filter_values(name)
-        define_method(name) do
-          values = instance_variable_get(:"@#{name}")
-          next values if values.nil?
+      def filter_values(name)
+        values = instance_variable_get(:"@#{name}")
+        return values if values.nil?
 
-          included_values = DocumentRequests.configuration.send(:"include_#{name}")
-          excluded_values = DocumentRequests.configuration.send(:"exclude_#{name}")
-          hidden_values = DocumentRequests.configuration.send(:"hide_#{name}")
+        included_values = DocumentRequests.configuration.send(:"include_#{name}")
+        excluded_values = DocumentRequests.configuration.send(:"exclude_#{name}")
+        hidden_values = DocumentRequests.configuration.send(:"hide_#{name}")
+        enforce = DocumentRequests.configuration.send(:"enforce_explain_#{name}")
 
-          values.select! do |k, v|
-            next false if included_values and included_values.exclude?(k)
-            next false if excluded_values.include?(k)
-            values[k].value = "..." if hidden_values.include?(k)
-            true
-          end
-          values
+        unexplained = []
+        values.select! do |k, v|
+          next false if included_values and included_values.exclude?(k)
+          next false if excluded_values.include?(k)
+          unexplained << k if v.generated
+          v.value = "..." if hidden_values.include?(k)
+          true
         end
+        raise "Unexplained parameters used: #{unexplained.join(", ")}" if enforce and unexplained.any?
+        values
       end
-
-      public
-
-      filter_values :request_parameters
-      filter_values :request_headers
-      filter_values :response_parameters
-      filter_values :response_headers
-
-      private
 
       def process_request_parameters(parameters, prefix: nil)
         @request_parameters = {}
         process_parameters(parameters, @request_parameters, explanation: @explanation.request.parameters)
+        filter_values :request_parameters
       end
 
       def process_request_headers(headers)
         @request_headers = {}
         headers.each do |name, value|
-          @request_headers[name] = @explanation.request.headers[name] || Parameter.new
+          @request_headers[name] = @explanation.request.headers[name] || Parameter.new(generated: true)
           @request_headers[name].value = value
         end
         @explanation.request.headers.each { |name, header| @request_headers[name] ||= header }
+        filter_values :request_headers
       end
 
       def process_response_parameters(parameters = nil)
@@ -81,20 +77,22 @@ module RSpec
           @response_parameters = {}
           process_parameters(@parsed_response, @response_parameters, explanation: @explanation.response.parameters)
         end
+        filter_values :response_parameters
       end
 
       def process_response_headers
         @response_headers = {}
         @response.headers.each do |name, value|
-          @response_headers[name] = @explanation.response.headers[name] || Parameter.new
+          @response_headers[name] = @explanation.response.headers[name] || Parameter.new(generated: true)
           @response_headers[name].value = value
         end
         @explanation.response.headers.each { |name, header| @response_headers[name] ||= header }
+        filter_values :response_headers
       end
 
       def process_parameters(input, output, explanation:, prefix: nil)
         input.each do |key, value|
-          name = prefix ? "#{prefix}[#{key}]" : key
+          name = prefix ? "#{prefix}[#{key}]" : key.to_s
           case value
             when Hash
               process_parameters(value, output, explanation: explanation, prefix: name)
@@ -110,11 +108,11 @@ module RSpec
                 end
               end
               if base_values.any?
-                output[name] ||= explanation[name] || Parameter.new
+                output[name] ||= explanation[name] || Parameter.new(generated: true)
                 output[name].value = [output[name].value, base_values.to_s].compact.join(", ")
               end
             else
-              output[name] ||= explanation[name] || Parameter.new
+              output[name] ||= explanation[name] || Parameter.new(generated: true)
               output[name].value = [output[name].value, value].compact.join(", ")
           end
         end
