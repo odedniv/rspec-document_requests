@@ -7,8 +7,18 @@ module RSpec
       self.documented_requests = []
 
       [:get, :post, :patch, :put, :delete, :head].each do |method|
-        define_method(method) do |path, parameters = nil, headers_or_env = nil|
-          result = super(path, parameters, headers_or_env)
+        define_method(method) do |path, *args|
+          result = super(path, *args)
+
+          if ActionPack::VERSION::MAJOR < 5
+            # old signature (https://github.com/rails/rails/blob/v4.2.7.1/actionpack/lib/action_dispatch/testing/integration.rb#L265)
+            # def process(method, path, parameters = nil, headers_or_env = nil)
+            parameters = args[0]
+          else
+            # new signature (https://github.com/rails/rails/blob/master/actionpack/lib/action_dispatch/testing/integration.rb#L204)
+            # def process(method, path, params: nil, headers: nil, env: nil, xhr: false, as: nil)
+            parameters = (args[0] || {})[:params]
+          end
 
           if not @document_requests_prevented and @currently_documented_example
             DSL.documented_requests << Request.new(

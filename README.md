@@ -281,8 +281,10 @@ end
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies.
-Then, run `bin/console` for an interactive prompt that will allow you to experiment.
+1. Pick an Active Record version to develop against, then export it: `export AR=4.2.6`.
+2. Run `bin/setup` to install dependencies.
+3. Run `rspec` to run the specs.
+
 
 ## Contributing
 

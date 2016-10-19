@@ -14,8 +14,8 @@ module RSpec
       add_property :writer, Writers::Markdown
       add_property :filename_generator, -> (name) { name.downcase.gsub(/[_ ]+/, '-') }
       add_property :response_parser, -> (response) {
-        case
-          when response.content_type.json? then JSON.parse(response.body)
+        case response.content_type
+          when 'application/json' then JSON.parse(response.body)
         end
       }
 
