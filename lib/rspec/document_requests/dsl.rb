@@ -7,8 +7,8 @@ module RSpec
       self.documented_requests = []
 
       [:get, :post, :patch, :put, :delete, :head].each do |method|
-        define_method(method) do |path, *args|
-          result = super(path, *args)
+        define_method(method) do |path, *args, **kwargs|
+          result = super(path, *args, **kwargs)
 
           if ActionPack::VERSION::MAJOR < 5
             # old signature (https://github.com/rails/rails/blob/v4.2.7.1/actionpack/lib/action_dispatch/testing/integration.rb#L265)

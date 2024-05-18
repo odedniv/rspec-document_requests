@@ -9,12 +9,12 @@ module RSpec
           @headers = {}
         end
 
-        def parameter(name, *args)
-          @parameters[name] = Request::Parameter.new(*args)
+        def parameter(name, ...)
+          @parameters[name] = Request::Parameter.new(...)
         end
 
-        def header(name, *args)
-          @headers[name] = Request::Parameter.new(*args)
+        def header(name, ...)
+          @headers[name] = Request::Parameter.new(...)
         end
       end
 
